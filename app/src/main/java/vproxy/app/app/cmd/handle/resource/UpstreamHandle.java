@@ -18,11 +18,6 @@ public class UpstreamHandle {
         return Application.get().upstreamHolder.get(r.alias);
     }
 
-    public static void checkUpstream(Resource upstream) throws Exception {
-        if (upstream.parentResource != null)
-            throw new Exception(upstream.type.fullname + " is on top level");
-    }
-
     public static List<String> names() {
         return Application.get().upstreamHolder.names();
     }
@@ -43,7 +38,7 @@ public class UpstreamHandle {
         }
     }
 
-    public static void forceRemove(Command cmd) throws Exception {
+    public static void remove(Command cmd) throws Exception {
         Application.get().upstreamHolder.remove(cmd.resource.alias);
     }
 }

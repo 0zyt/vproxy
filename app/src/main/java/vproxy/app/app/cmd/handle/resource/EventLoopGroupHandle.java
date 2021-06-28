@@ -16,11 +16,6 @@ public class EventLoopGroupHandle {
     private EventLoopGroupHandle() {
     }
 
-    public static void checkEventLoopGroup(Resource eventLoopGroup) throws Exception {
-        if (eventLoopGroup.parentResource != null)
-            throw new Exception(eventLoopGroup.type.fullname + " is on top level");
-    }
-
     public static EventLoopGroup get(Resource resource) throws Exception {
         return get(resource.alias);
     }
@@ -65,7 +60,7 @@ public class EventLoopGroupHandle {
         }
     }
 
-    public static void forceRemvoe(Command cmd) throws Exception {
+    public static void remvoe(Command cmd) throws Exception {
         String toRemoveName = cmd.resource.alias;
         Application.get().eventLoopGroupHolder.removeAndClose(toRemoveName);
     }

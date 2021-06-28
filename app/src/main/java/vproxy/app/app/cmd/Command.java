@@ -874,7 +874,7 @@ public class Command {
                         return new CmdResult();
                     case r:
                     case R:
-                        ServerHandle.forceRemove(this);
+                        ServerHandle.remove(this);
                         return new CmdResult();
                     case u:
                         ServerHandle.update(this);
@@ -892,7 +892,7 @@ public class Command {
                     case r:
                         UpstreamHandle.preRemoveCheck(this);
                     case R:
-                        UpstreamHandle.forceRemove(this);
+                        UpstreamHandle.remove(this);
                         return new CmdResult();
                 }
             case elg: // top level
@@ -907,7 +907,7 @@ public class Command {
                     case r:
                         EventLoopGroupHandle.preRemoveCheck(this);
                     case R:
-                        EventLoopGroupHandle.forceRemvoe(this);
+                        EventLoopGroupHandle.remvoe(this);
                         return new CmdResult();
                 }
             case el: // can only be retrieved from event loop group
@@ -921,7 +921,7 @@ public class Command {
                         return new CmdResult();
                     case r:
                     case R:
-                        EventLoopHandle.forceRemove(this);
+                        EventLoopHandle.remove(this);
                         return new CmdResult();
                 }
             case sg: // top level or retrieved from upstream
@@ -939,7 +939,7 @@ public class Command {
                     case r:
                         ServerGroupHandle.preRemoveCheck(this);
                     case R:
-                        ServerGroupHandle.forceRemove(this);
+                        ServerGroupHandle.remove(this);
                         return new CmdResult();
                     case u:
                         ServerGroupHandle.update(this);
@@ -959,7 +959,7 @@ public class Command {
                         return new CmdResult();
                     case r:
                     case R:
-                        TcpLBHandle.forceRemove(this);
+                        TcpLBHandle.remove(this);
                         return new CmdResult();
                     case u:
                         TcpLBHandle.update(this);
@@ -980,7 +980,7 @@ public class Command {
                         return new CmdResult();
                     case r:
                     case R:
-                        Socks5ServerHandle.forceRemove(this);
+                        Socks5ServerHandle.remove(this);
                         return new CmdResult();
                     case u:
                         Socks5ServerHandle.update(this);
@@ -1001,7 +1001,7 @@ public class Command {
                         return new CmdResult();
                     case r:
                     case R:
-                        DNSServerHandle.forceRemove(this);
+                        DNSServerHandle.remove(this);
                         return new CmdResult();
                     case u:
                         DNSServerHandle.update(this);
@@ -1047,7 +1047,7 @@ public class Command {
                     case r:
                         SecurityGroupHandle.preRemoveCheck(this);
                     case R:
-                        SecurityGroupHandle.forceRemove(this);
+                        SecurityGroupHandle.remove(this);
                         return new CmdResult();
                 }
             case secgr:
@@ -1064,7 +1064,7 @@ public class Command {
                         return new CmdResult();
                     case r:
                     case R:
-                        SecurityGroupRuleHandle.forceRemove(this);
+                        SecurityGroupRuleHandle.remove(this);
                         return new CmdResult();
                 }
             case dnscache:
@@ -1238,7 +1238,7 @@ public class Command {
                     case r:
                         CertKeyHandle.preRemoveCheck(this);
                     case R:
-                        CertKeyHandle.forceRemove(this);
+                        CertKeyHandle.remove(this);
                         return new CmdResult();
                     case a:
                         CertKeyHandle.add(this);
