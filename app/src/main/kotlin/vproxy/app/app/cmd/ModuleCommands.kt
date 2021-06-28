@@ -3,6 +3,7 @@ package vproxy.app.app.cmd
 import vproxy.app.app.cmd.handle.param.*
 import vproxy.app.app.cmd.handle.resource.*
 import vproxy.base.dns.Cache
+import vproxy.base.util.exception.XException
 import java.util.stream.Collectors
 
 @Suppress("NestedLambdaShadowedImplicitParameter")
@@ -14,16 +15,16 @@ class ModuleCommands : Commands() {
         relation = ResourceType.tl,
         action = ActType.add,
         params = {
-          it + ResActParam(Param.addr, true) { AddrHandle.check(it) }
-          it + ResActParam(Param.ups, true)
-          it + ResActParam(Param.aelg, false)
-          it + ResActParam(Param.elg, false)
-          it + ResActParam(Param.inbuffersize, false) { InBufferSizeHandle.check(it) }
-          it + ResActParam(Param.outbuffersize, false) { OutBufferSizeHandle.check(it) }
-          it + ResActParam(Param.timeout, false) { TimeoutHandle.check(it) }
-          it + ResActParam(Param.protocol, false) { ProtocolHandle.check(it) }
-          it + ResActParam(Param.ck, false)
-          it + ResActParam(Param.secg, false)
+          it + ResActParam(Param.addr, required) { AddrHandle.check(it) }
+          it + ResActParam(Param.ups, required)
+          it + ResActParam(Param.aelg)
+          it + ResActParam(Param.elg)
+          it + ResActParam(Param.inbuffersize) { InBufferSizeHandle.check(it) }
+          it + ResActParam(Param.outbuffersize) { OutBufferSizeHandle.check(it) }
+          it + ResActParam(Param.timeout) { TimeoutHandle.check(it) }
+          it + ResActParam(Param.protocol) { ProtocolHandle.check(it) }
+          it + ResActParam(Param.ck)
+          it + ResActParam(Param.secg)
         },
         exec = execUpdate { TcpLBHandle.add(it) },
       )
@@ -535,6 +536,394 @@ class ModuleCommands : Commands() {
         action = ActType.remove,
         check = { ResolverHandle.checkResolver(it.resource.parentResource) },
         exec = execUpdate { DnsCacheHandle.remove(it) }
+      )
+    }
+    it + Res(ResourceType.sw) {
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.add,
+        params = {
+          it + ResActParam(Param.addr, required) { AddrHandle.check(it) }
+          it + ResActParam(Param.mactabletimeout) { TimeoutHandle.check(it, Param.mactabletimeout) }
+          it + ResActParam(Param.arptabletimeout) { TimeoutHandle.check(it, Param.arptabletimeout) }
+          it + ResActParam(Param.elg)
+          it + ResActParam(Param.secg)
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        exec = execUpdate { SwitchHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.list,
+        exec = {
+          val swNames = SwitchHandle.names()
+          CmdResult(swNames, swNames, utilJoinList(swNames))
+        }
+      )
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.listdetail,
+        exec = {
+          val swRefList = SwitchHandle.details()
+          val swRefStrList = swRefList.stream().map { it.toString() }.collect(Collectors.toList())
+          CmdResult(swRefList, swRefStrList, utilJoinList(swRefList))
+        }
+      )
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.update,
+        params = {
+          it + ResActParam(Param.mactabletimeout) { TimeoutHandle.check(it, Param.mactabletimeout) }
+          it + ResActParam(Param.arptabletimeout) { TimeoutHandle.check(it, Param.arptabletimeout) }
+          it + ResActParam(Param.secg)
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        exec = execUpdate { SwitchHandle.update(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.remove,
+        exec = execUpdate { SwitchHandle.remove(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.addr) { AddrHandle.check(it) }
+        },
+        flags = {
+          it + ResActFlag(Flag.noswitchflag)
+        },
+        exec = execUpdate { SwitchHandle.attach(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.sw,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.sw),
+        exec = execUpdate { SwitchHandle.detach(it) }
+      )
+    }
+    it + Res(ResourceType.vpc) {
+      it + ResAct(
+        relation = ResourceType.vpc,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.v4net, required) {
+            NetworkHandle.check(it, Param.v4net)
+            val net = NetworkHandle.get(it, Param.v4net)
+            if (net.ip.address.size != 4) {
+              throw XException("invalid argument " + Param.v4net + ": not ipv4 network: " + net)
+            }
+          }
+          it + ResActParam(Param.v6net) {
+            NetworkHandle.check(it, Param.v6net)
+            val net = NetworkHandle.get(it, Param.v6net)
+            if (net.ip.address.size != 16) {
+              throw XException("invalid argument " + Param.v6net + ": not ipv6 network: " + net)
+            }
+          }
+          it + ResActParam(Param.anno) { AnnotationsHandle.check(it) }
+        },
+        check = { VpcHandle.checkVpcName(it.resource) },
+        exec = execUpdate { VpcHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
+        action = ActType.list,
+        check = { VpcHandle.checkVpcName(it.resource) },
+        exec = {
+          val vpcLs = VpcHandle.list(it.resource.parentResource)
+          val ls = vpcLs.stream().map { it.vpc }.collect(Collectors.toList())
+          CmdResult(vpcLs, ls, utilJoinList(ls))
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
+        action = ActType.listdetail,
+        check = { VpcHandle.checkVpcName(it.resource) },
+        exec = {
+          val vpcLs = VpcHandle.list(it.resource.parentResource)
+          val ls = vpcLs.stream().map { it.toString() }.collect(Collectors.toList())
+          CmdResult(vpcLs, ls, utilJoinList(ls))
+        }
+      )
+      it + ResAct(
+        relation = ResourceType.vpc,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.sw),
+        check = { VpcHandle.checkVpcName(it.resource) },
+        exec = execUpdate { VpcHandle.remove(it) }
+      )
+    }
+    it + Res(ResourceType.iface) {
+      it + ResAct(
+        relation = ResRelation(ResourceType.iface, ResRelation(ResourceType.sw)),
+        action = ActType.list,
+        exec = {
+          val cnt = IfaceHandle.count(it.resource.parentResource)
+          CmdResult(cnt, cnt, "" + cnt)
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.iface, ResRelation(ResourceType.sw)),
+        action = ActType.listdetail,
+        exec = {
+          val ifaces = IfaceHandle.list(it.resource.parentResource)
+          val ls = ifaces.stream().map { it.toString() + " " + it.paramsToString() }
+            .collect(Collectors.toList())
+          CmdResult(ifaces, ls, utilJoinList(ls))
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.iface, ResRelation(ResourceType.sw)),
+        action = ActType.update,
+        params = {
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        exec = execUpdate { IfaceHandle.update(it) }
+      )
+    }
+    it + Res(ResourceType.arp) {
+      it + ResAct(
+        relation = ResRelation(ResourceType.arp, ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw))),
+        action = ActType.list,
+        check = { VpcHandle.checkVpcName(it.resource.parentResource) },
+        exec = {
+          val cnt = ArpHandle.count(it.resource.parentResource)
+          CmdResult(cnt, cnt, "" + cnt)
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.arp, ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw))),
+        action = ActType.listdetail,
+        check = { VpcHandle.checkVpcName(it.resource.parentResource) },
+        exec = {
+          val arpLs = ArpHandle.list(it.resource.parentResource)
+          val ls = arpLs.stream().map { it.toString(arpLs) }.collect(Collectors.toList())
+          CmdResult(arpLs, ls, utilJoinList(ls))
+        }
+      )
+    }
+    it + Res(ResourceType.user) {
+      it + ResAct(
+        relation = ResourceType.user,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.pass, required)
+          it + ResActParam(Param.vni, required) { VniHandle.check(it) }
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        exec = execUpdate { UserHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.user, ResRelation(ResourceType.sw)),
+        action = ActType.list,
+        exec = {
+          val users = UserHandle.names(it.resource.parentResource)
+          CmdResult(users, users, utilJoinList(users))
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.user, ResRelation(ResourceType.sw)),
+        action = ActType.listdetail,
+        exec = {
+          val userInfoList = UserHandle.list(it.resource.parentResource)
+          val strList = userInfoList.stream().map { it.toString() }
+            .collect(Collectors.toList())
+          CmdResult(userInfoList, strList, utilJoinList(strList))
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.user, ResRelation(ResourceType.sw)),
+        action = ActType.update,
+        params = {
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        exec = execUpdate { UserHandle.update(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.user,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.sw),
+        exec = execUpdate { UserHandle.remove(it) }
+      )
+    }
+    it + Res(ResourceType.tap) {
+      it + ResAct(
+        relation = ResourceType.tap,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.vni, required) { VniHandle.check(it) }
+          it + ResActParam(Param.postscript)
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        check = {
+          if (it.resource.alias.length > 15) {
+            throw XException("tap dev name pattern too long: should <= 15")
+          }
+        },
+        exec = execUpdate { TapHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.tap,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.sw),
+        exec = execUpdate { TapHandle.remove(it) }
+      )
+    }
+    it + Res(ResourceType.tun) {
+      it + ResAct(
+        relation = ResourceType.tun,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.vni, required) { VniHandle.check(it) }
+          it + ResActParam(Param.mac, required) { MacHandle.check(it) }
+          it + ResActParam(Param.postscript)
+          it + ResActParam(Param.mtu) { MTUHandle.check(it) }
+          it + ResActParam(Param.flood) { FloodHandle.check(it) }
+        },
+        check = {
+          if (it.resource.alias.length > 15) {
+            throw XException("tun dev name pattern too long: should <= 15")
+          }
+        },
+        exec = execUpdate { TunHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.tun,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.sw),
+        exec = execUpdate { TunHandle.remove(it) }
+      )
+    }
+    it + Res(ResourceType.ucli) {
+      it + ResAct(
+        relation = ResourceType.ucli,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.pass, required)
+          it + ResActParam(Param.vni, required) { VniHandle.check(it) }
+          it + ResActParam(Param.addr, required) { AddrHandle.check(it) }
+        },
+        exec = execUpdate { UserClientHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResourceType.ucli,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.sw),
+        params = {
+          it + ResActParam(Param.addr, required) { AddrHandle.check(it) }
+        },
+        exec = execUpdate { UserClientHandle.forceRemove(it) }
+      )
+    }
+    it + Res(ResourceType.ip) {
+      it + ResAct(
+        relation = ResourceType.ip,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
+        params = {
+          it + ResActParam(Param.mac, required) { MacHandle.check(it) }
+        },
+        check = {
+          IpHandle.checkIpName(it.resource)
+          VpcHandle.checkVpcName(it.prepositionResource)
+        },
+        exec = execUpdate { IpHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.ip, ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw))),
+        action = ActType.list,
+        check = {
+          IpHandle.checkIpName(it.resource)
+          VpcHandle.checkVpcName(it.resource.parentResource)
+        },
+        exec = {
+          val names = IpHandle.names(it.resource.parentResource)
+          val strNames = names.stream().map { it.formatToIPString() }.collect(Collectors.toList())
+          CmdResult(names, strNames, utilJoinList(strNames))
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.ip, ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw))),
+        action = ActType.listdetail,
+        check = {
+          IpHandle.checkIpName(it.resource)
+          VpcHandle.checkVpcName(it.resource.parentResource)
+        },
+        exec = {
+          val tuples = IpHandle.list(it.resource.parentResource)
+          val strTuples = tuples.stream().map {
+            it.ip.formatToIPString() + " -> mac " + it.mac +
+              if (it.annotations.isEmpty) "" else " annotations " + it.annotations
+          }.collect(Collectors.toList())
+          CmdResult(tuples, strTuples, utilJoinList(strTuples))
+        }
+      )
+      it + ResAct(
+        relation = ResourceType.ip,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
+        check = {
+          IpHandle.checkIpName(it.resource)
+          VpcHandle.checkVpcName(it.prepositionResource)
+        },
+        exec = execUpdate { IpHandle.remove(it) }
+      )
+    }
+    it + Res(ResourceType.route) {
+      it + ResAct(
+        relation = ResourceType.route,
+        action = ActType.addto,
+        targetRelation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
+        params = {
+          it + ResActParam(Param.net, required) { NetworkHandle.check(it) }
+          it + ResActParam(Param.vni) { NetworkHandle.check(it) }
+          it + ResActParam(Param.via) { NetworkHandle.check(it) }
+        },
+        check = {
+          VpcHandle.checkVpcName(it.prepositionResource)
+          RouteHandle.checkCreateRoute(it)
+        },
+        exec = execUpdate { RouteHandle.add(it) }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.route, ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw))),
+        action = ActType.list,
+        check = { VpcHandle.checkVpcName(it.resource.parentResource) },
+        exec = {
+          val names = RouteHandle.names(it.resource.parentResource)
+          CmdResult(names, names, utilJoinList(names))
+        }
+      )
+      it + ResAct(
+        relation = ResRelation(ResourceType.route, ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw))),
+        action = ActType.listdetail,
+        check = { VpcHandle.checkVpcName(it.resource.parentResource) },
+        exec = {
+          val routes = RouteHandle.list(it.resource.parentResource)
+          val strTuples = routes.stream().map { it.toString() }.collect(Collectors.toList())
+          CmdResult(routes, strTuples, utilJoinList(strTuples))
+        }
+      )
+      it + ResAct(
+        relation = ResourceType.route,
+        action = ActType.removefrom,
+        targetRelation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
+        check = { VpcHandle.checkVpcName(it.resource.parentResource) },
+        exec = execUpdate { RouteHandle.remove(it) }
       )
     }
   } // end init

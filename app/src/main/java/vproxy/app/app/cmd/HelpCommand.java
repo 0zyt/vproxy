@@ -1044,20 +1044,6 @@ public class HelpCommand {
                             "\"OK\""
                         )
                     )),
-                new ResActMan(ActMan.update, "update a switch",
-                    Arrays.asList(
-                        new ResActParamMan(ParamMan.mactabletimeout, "timeout for mac table (ms)", "not changed"),
-                        new ResActParamMan(ParamMan.arptabletimeout, "timeout for arp table (ms)", "not changed"),
-                        new ResActParamMan(ParamMan.securitygroup, "the security group for bare vxlan packets (note: vproxy wrapped encrypted packets won't be affected)", "not changed"),
-                        new ResActParamMan(ParamMan.mtu, "default mtu setting for new connected ports, updating it will not affect the existing ones", "not changed"),
-                        new ResActParamMan(ParamMan.flood, "default flood setting for new connected ports, updating it will not affect the existing ones", "not changed")
-                    ),
-                    Collections.singletonList(
-                        new Tuple<>(
-                            "update switch sw0 mac-table-timeout 60000 arp-table-timeout 120000",
-                            "\"OK\""
-                        )
-                    )),
                 new ResActMan(ActMan.list, "get names of switches",
                     Collections.emptyList(),
                     Collections.singletonList(
@@ -1072,6 +1058,20 @@ public class HelpCommand {
                         new Tuple<>(
                             "list-detail switch",
                             "1) \"sw0\" -> event-loop-group worker bind 0.0.0.0:4789 password p@sSw0rD mac-table-timeout 300000 arp-table-timeout 14400000 bare-vxlan-access (allow-all)"
+                        )
+                    )),
+                new ResActMan(ActMan.update, "update a switch",
+                    Arrays.asList(
+                        new ResActParamMan(ParamMan.mactabletimeout, "timeout for mac table (ms)", "not changed"),
+                        new ResActParamMan(ParamMan.arptabletimeout, "timeout for arp table (ms)", "not changed"),
+                        new ResActParamMan(ParamMan.securitygroup, "the security group for bare vxlan packets (note: vproxy wrapped encrypted packets won't be affected)", "not changed"),
+                        new ResActParamMan(ParamMan.mtu, "default mtu setting for new connected ports, updating it will not affect the existing ones", "not changed"),
+                        new ResActParamMan(ParamMan.flood, "default flood setting for new connected ports, updating it will not affect the existing ones", "not changed")
+                    ),
+                    Collections.singletonList(
+                        new Tuple<>(
+                            "update switch sw0 mac-table-timeout 60000 arp-table-timeout 120000",
+                            "\"OK\""
                         )
                     )),
                 new ResActMan(ActMan.remove, "stop and remove a switch",
@@ -1104,6 +1104,16 @@ public class HelpCommand {
             )),
         vpc("vpc", null, "a private network",
             Arrays.asList(
+                new ResActMan(ActMan.addto, "create a vpc in a switch. the name should be vni of the vpc", Arrays.asList(
+                    new ResActParamMan(ParamMan.v4network, "the ipv4 network allowed in this vpc"),
+                    new ResActParamMan(ParamMan.v6network, "the ipv6 network allowed in this vpc", "not allowed"),
+                    new ResActParamMan(ParamMan.annotations, "annotations of the vpc", "{}")
+                ), Collections.singletonList(
+                    new Tuple<>(
+                        "add vpc 1314 to switch sw0 v4network 172.16.0.0/16",
+                        "\"OK\""
+                    )
+                )),
                 new ResActMan(ActMan.list, "list existing vpcs in a switch", Collections.emptyList(), Collections.singletonList(
                     new Tuple<>(
                         "list vpc in switch sw0",
@@ -1114,15 +1124,6 @@ public class HelpCommand {
                     new Tuple<>(
                         "list-detail vpc in switch sw0",
                         "1) \"1314 -> v4network 172.16.0.0/16\""
-                    )
-                )),
-                new ResActMan(ActMan.addto, "create a vpc in a switch. the name should be vni of the vpc", Arrays.asList(
-                    new ResActParamMan(ParamMan.v4network, "the ipv4 network allowed in this vpc"),
-                    new ResActParamMan(ParamMan.v6network, "the ipv6 network allowed in this vpc", "not allowed")
-                ), Collections.singletonList(
-                    new Tuple<>(
-                        "add vpc 1314 to switch sw0 v4network 172.16.0.0/16",
-                        "\"OK\""
                     )
                 )),
                 new ResActMan(ActMan.removefrom, "remove a vpc from a switch", Collections.emptyList(), Collections.singletonList(
@@ -1153,6 +1154,10 @@ public class HelpCommand {
                 ), Arrays.asList(
                     new Tuple<>(
                         "update iface tap:tap0 in switch sw0 mtu 9000 flood allow",
+                        "\"OK\""
+                    ),
+                    new Tuple<>(
+                        "update iface tun:utun9 in switch sw0 mtu 9000 flood allow",
                         "\"OK\""
                     ),
                     new Tuple<>(
@@ -1191,6 +1196,17 @@ public class HelpCommand {
             )),
         user("user", null, "user in a switch",
             Arrays.asList(
+                new ResActMan(ActMan.addto, "add a user to a switch", Arrays.asList(
+                    new ResActParamMan(ParamMan.pass, "password of the user"),
+                    new ResActParamMan(ParamMan.vni, "vni assigned for the user"),
+                    new ResActParamMan(ParamMan.mtu, "mtu for the user interface when the user is connected", "mtu setting of the switch"),
+                    new ResActParamMan(ParamMan.flood, "whether the user interface allows flooding traffic", "flood setting of the switch")
+                ), Collections.singletonList(
+                    new Tuple<>(
+                        "add user hello to switch sw0 vni 1314 password p@sSw0rD",
+                        "\"OK\""
+                    )
+                )),
                 new ResActMan(ActMan.list, "list user names in a switch", Collections.emptyList(), Collections.singletonList(
                     new Tuple<>(
                         "list user in switch sw0",
@@ -1203,17 +1219,6 @@ public class HelpCommand {
                         "1) \"hello\" -> vni 1314"
                     )
                 )),
-                new ResActMan(ActMan.add, "add a user to a switch", Arrays.asList(
-                    new ResActParamMan(ParamMan.pass, "password of the user"),
-                    new ResActParamMan(ParamMan.vni, "vni assigned for the user"),
-                    new ResActParamMan(ParamMan.mtu, "mtu for the user interface when the user is connected", "mtu setting of the switch"),
-                    new ResActParamMan(ParamMan.flood, "whether the user interface allows flooding traffic", "flood setting of the switch")
-                ), Collections.singletonList(
-                    new Tuple<>(
-                        "add user hello to switch sw0 vni 1314 password p@sSw0rD",
-                        "\"OK\""
-                    )
-                )),
                 new ResActMan(ActMan.update, "update user info in a switch", Arrays.asList(
                     new ResActParamMan(ParamMan.mtu, "mtu for the user interface when the user is connected, updating it will not affect connected ones", "not changed"),
                     new ResActParamMan(ParamMan.flood, "whether the user interface allows flooding traffic, updating it will not affect connected ones", "not changed")
@@ -1223,7 +1228,7 @@ public class HelpCommand {
                         "\"OK\""
                     )
                 )),
-                new ResActMan(ActMan.remove, "remove a user from a switch", Collections.emptyList(), Collections.singletonList(
+                new ResActMan(ActMan.removefrom, "remove a user from a switch", Collections.emptyList(), Collections.singletonList(
                     new Tuple<>(
                         "remove user hello from switch sw0",
                         "\"OK\""
@@ -1300,6 +1305,14 @@ public class HelpCommand {
             )),
         ip("ip", null, "synthetic ip in a vpc of a switch",
             Arrays.asList(
+                new ResActMan(ActMan.addto, "add a synthetic ip to a vpc of a switch", Collections.singletonList(
+                    new ResActParamMan(ParamMan.mac, "mac address that the ip assigned on")
+                ), Collections.singletonList(
+                    new Tuple<>(
+                        "add ip 172.16.0.21 to vpc 1314 in switch sw0 mac e2:8b:11:00:00:22",
+                        "\"OK\""
+                    )
+                )),
                 new ResActMan(ActMan.list, "show synthetic ips in a vpc of a switch", Collections.emptyList(), Collections.singletonList(
                     new Tuple<>(
                         "list ip in vpc 1314 in switch sw0",
@@ -1314,14 +1327,6 @@ public class HelpCommand {
                             "2) \"[2001:0db8:0000:f101:0000:0000:0000:0002] -> mac e2:8b:11:00:00:33\""
                     )
                 )),
-                new ResActMan(ActMan.addto, "add a synthetic ip to a vpc of a switch", Collections.singletonList(
-                    new ResActParamMan(ParamMan.mac, "mac address that the ip assigned on")
-                ), Collections.singletonList(
-                    new Tuple<>(
-                        "add ip 172.16.0.21 to vpc 1314 in switch sw0 mac e2:8b:11:00:00:22",
-                        "\"OK\""
-                    )
-                )),
                 new ResActMan(ActMan.removefrom, "remove a synthetic ip from a vpc of a switch", Collections.emptyList(), Collections.singletonList(
                     new Tuple<>(
                         "remove ip 172.16.0.21 from vpc 1314 in switch sw0",
@@ -1331,20 +1336,6 @@ public class HelpCommand {
             )),
         route("route", null, "route rules in a vpc of a switch",
             Arrays.asList(
-                new ResActMan(ActMan.list, "show route rule names in a vpc of a switch", Collections.emptyList(), Collections.singletonList(
-                    new Tuple<>(
-                        "list route in vpc 1314 in switch sw0",
-                        "1) \"to172.17\"\n" +
-                            "2) \"to2001:0db8:0000:f102\""
-                    )
-                )),
-                new ResActMan(ActMan.listdetail, "show detailed info about route rules in a vpc of a switch", Collections.emptyList(), Collections.singletonList(
-                    new Tuple<>(
-                        "list-detail route in vpc 1314 in switch sw0",
-                        "1) \"to172.17 -> network 172.17.0.0/24 vni 1315\"\n" +
-                            "2) \"to2001:0db8:0000:f102 -> network [2001:0db8:0000:f102:0000:0000:0000:0000]/64 vni 1315\""
-                    )
-                )),
                 new ResActMan(ActMan.addto, "add a route to a vpc of a switch", Arrays.asList(
                     new ResActParamMan(ParamMan.network, "network to be matched"),
                     new ResActParamMan(ParamMan.vni, "the vni to send packet to. only one of vni|via can be used"),
@@ -1357,6 +1348,20 @@ public class HelpCommand {
                     new Tuple<>(
                         "add route to172.17 to vpc 1314 in switch sw0 network 172.17.0.0/24 via 172.16.0.1",
                         "\"OK\""
+                    )
+                )),
+                new ResActMan(ActMan.list, "show route rule names in a vpc of a switch", Collections.emptyList(), Collections.singletonList(
+                    new Tuple<>(
+                        "list route in vpc 1314 in switch sw0",
+                        "1) \"to172.17\"\n" +
+                            "2) \"to2001:0db8:0000:f102\""
+                    )
+                )),
+                new ResActMan(ActMan.listdetail, "show detailed info about route rules in a vpc of a switch", Collections.emptyList(), Collections.singletonList(
+                    new Tuple<>(
+                        "list-detail route in vpc 1314 in switch sw0",
+                        "1) \"to172.17 -> network 172.17.0.0/24 vni 1315\"\n" +
+                            "2) \"to2001:0db8:0000:f102 -> network [2001:0db8:0000:f102:0000:0000:0000:0000]/64 vni 1315\""
                     )
                 )),
                 new ResActMan(ActMan.removefrom, "remove a route rule from a vpc of a switch", Collections.emptyList(), Collections.singletonList(
