@@ -9,6 +9,8 @@ import vproxy.base.component.svrgroup.ServerGroup;
 import vproxy.base.util.exception.XException;
 import vproxy.component.app.Socks5Server;
 import vproxy.component.app.TcpLB;
+import vproxy.dns.DNSServer;
+import vproxy.vswitch.Switch;
 
 import java.util.List;
 
@@ -52,11 +54,26 @@ public class EventLoopGroupHandle {
             if (socks5.acceptorGroup.equals(g) || socks5.workerGroup.equals(g))
                 throw new XException(ResourceType.elg.fullname + " " + toRemoveName + " is used by " + ResourceType.socks5.fullname + " " + socks5.alias);
         }
+        // check dns
+        for (String name : Application.get().dnsServerHolder.names()) {
+            DNSServer dns = Application.get().dnsServerHolder.get(name);
+            if (dns.eventLoopGroup.equals(g)) {
+                throw new XException(ResourceType.elg.fullname + " " + toRemoveName + " is used by " + ResourceType.dns.fullname + " " + dns.alias);
+            }
+        }
         // check servers group
         for (String name : Application.get().serverGroupHolder.names()) {
             ServerGroup sg = Application.get().serverGroupHolder.get(name);
-            if (sg.eventLoopGroup.equals(g))
+            if (sg.eventLoopGroup.equals(g)) {
                 throw new XException(ResourceType.elg.fullname + " " + toRemoveName + " is used by " + ResourceType.sg.fullname + " " + sg.alias);
+            }
+        }
+        // check switch
+        for (String name : Application.get().switchHolder.names()) {
+            Switch sw = Application.get().switchHolder.get(name);
+            if (sw.eventLoopGroup.equals(g)) {
+                throw new XException(ResourceType.elg.fullname + " " + toRemoveName + " is used by " + ResourceType.sw.fullname + " " + sw.alias);
+            }
         }
     }
 

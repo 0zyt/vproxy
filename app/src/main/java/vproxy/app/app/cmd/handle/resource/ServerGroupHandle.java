@@ -98,8 +98,6 @@ public class ServerGroupHandle {
     }
 
     public static void preRemoveCheck(Command cmd) throws Exception {
-        if (cmd.prepositionResource != null)
-            return; // it's ok to detach from upstream
         // remove top level server group
         ServerGroup serverGroup = Application.get().serverGroupHolder.get(cmd.resource.alias);
 

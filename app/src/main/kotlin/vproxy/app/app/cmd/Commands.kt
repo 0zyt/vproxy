@@ -7,7 +7,7 @@ import vproxy.base.util.exception.XException
 import vproxy.base.util.functional.ConsumerEx
 import java.util.*
 
-open class Commands protected constructor() {
+abstract class Commands protected constructor() {
   protected val resources = ArrayList<Res>()
 
   @Throws(Exception::class)
@@ -50,19 +50,20 @@ open class Commands protected constructor() {
       }
     }
     val actLs = res.actions[actType] ?: throw XException("unsupported action " + actType.fullname + " for " + cmd.resource.type.fullname)
-    val act: ResAct? = null
+    var act: ResAct? = null
     val errls = ArrayList<XException>()
-    @Suppress("NAME_SHADOWING")
-    for (act in actLs) {
+    for (a in actLs) {
       // check resource
       try {
-        checkParentRes(act, cmd)
-        checkPreposition(act, cmd)
+        checkParentRes(a, cmd)
+        checkPreposition(a, cmd)
       } catch (e: XException) {
         // skip
         errls.add(e)
         continue
       }
+      act = a
+      break
     }
 
     if (act == null) {

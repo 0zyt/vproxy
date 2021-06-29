@@ -22,7 +22,7 @@ class ModuleCommands : Commands() {
           it + ResActParam(Param.inbuffersize) { InBufferSizeHandle.check(it) }
           it + ResActParam(Param.outbuffersize) { OutBufferSizeHandle.check(it) }
           it + ResActParam(Param.timeout) { TimeoutHandle.check(it) }
-          it + ResActParam(Param.protocol) { ProtocolHandle.check(it) }
+          it + ResActParam(Param.protocol)
           it + ResActParam(Param.ck)
           it + ResActParam(Param.secg)
         },
@@ -51,6 +51,7 @@ class ModuleCommands : Commands() {
           it + ResActParam(Param.outbuffersize) { OutBufferSizeHandle.check(it) }
           it + ResActParam(Param.timeout) { TimeoutHandle.check(it) }
           it + ResActParam(Param.ck)
+          it + ResActParam(Param.secg)
         },
         exec = execUpdate { TcpLBHandle.update(it) }
       )
@@ -65,10 +66,10 @@ class ModuleCommands : Commands() {
         relation = ResourceType.socks5,
         action = ActType.add,
         params = {
-          it + ResActParam(Param.aelg)
-          it + ResActParam(Param.elg)
           it + ResActParam(Param.addr, required) { AddrHandle.check(it) }
           it + ResActParam(Param.ups, required)
+          it + ResActParam(Param.aelg)
+          it + ResActParam(Param.elg)
           it + ResActParam(Param.inbuffersize) { InBufferSizeHandle.check(it) }
           it + ResActParam(Param.outbuffersize) { OutBufferSizeHandle.check(it) }
           it + ResActParam(Param.timeout) { TimeoutHandle.check(it) }
@@ -121,9 +122,9 @@ class ModuleCommands : Commands() {
         relation = ResourceType.dns,
         action = ActType.add,
         params = {
-          it + ResActParam(Param.elg)
           it + ResActParam(Param.addr, required) { AddrHandle.check(it) }
           it + ResActParam(Param.ups, required)
+          it + ResActParam(Param.elg)
           it + ResActParam(Param.ttl) { TTLHandle.check(it) }
           it + ResActParam(Param.secg)
         },
@@ -321,7 +322,7 @@ class ModuleCommands : Commands() {
         relation = ResourceType.el,
         action = ActType.addto,
         targetRelation = ResRelation(ResourceType.elg),
-        exec = execUpdate { EventLoopGroupHandle.add(it) }
+        exec = execUpdate { EventLoopHandle.add(it) }
       )
       it + ResAct(
         relation = ResRelation(ResourceType.el, ResRelation(ResourceType.elg)),
@@ -367,7 +368,7 @@ class ModuleCommands : Commands() {
       )
       it + ResAct(
         relation = ResRelation(ResourceType.svr, ResRelation(ResourceType.sg)),
-        action = ActType.list,
+        action = ActType.listdetail,
         exec = {
           val svrRefList = ServerHandle.detail(it.resource.parentResource)
           val svrRefStrList = svrRefList.stream().map { it.toString() }
@@ -421,7 +422,7 @@ class ModuleCommands : Commands() {
         relation = ResourceType.secg,
         action = ActType.update,
         params = {
-          it + ResActParam(Param.secgrdefault, required) { SecGRDefaultHandle.check(it) }
+          it + ResActParam(Param.secgrdefault) { SecGRDefaultHandle.check(it) }
         },
         exec = execUpdate { SecurityGroupHandle.update(it) }
       )
@@ -455,7 +456,7 @@ class ModuleCommands : Commands() {
       )
       it + ResAct(
         relation = ResRelation(ResourceType.secgr, ResRelation(ResourceType.secg)),
-        action = ActType.list,
+        action = ActType.listdetail,
         exec = {
           val rules = SecurityGroupRuleHandle.detail(it.resource.parentResource)
           val ruleStrList = rules.stream().map { it.toString() }
@@ -922,7 +923,7 @@ class ModuleCommands : Commands() {
         relation = ResourceType.route,
         action = ActType.removefrom,
         targetRelation = ResRelation(ResourceType.vpc, ResRelation(ResourceType.sw)),
-        check = { VpcHandle.checkVpcName(it.resource.parentResource) },
+        check = { VpcHandle.checkVpcName(it.prepositionResource) },
         exec = execUpdate { RouteHandle.remove(it) }
       )
     }

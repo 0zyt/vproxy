@@ -457,10 +457,10 @@ public class HelpCommand {
         tcplb("tcp-lb", "tl", "TCP load balancer", Arrays.asList(
             new ResActMan(ActMan.add, "create a loadbalancer",
                 Arrays.asList(
-                    new ResActParamMan(ParamMan.acceptorelg, "choose an event loop group as the acceptor event loop group. can be the same as worker event loop group", Application.DEFAULT_ACCEPTOR_EVENT_LOOP_GROUP_NAME)
-                    , new ResActParamMan(ParamMan.eventloopgroup, "choose an event loop group as the worker event loop group. can be the same as acceptor event loop group", Application.DEFAULT_WORKER_EVENT_LOOP_GROUP_NAME)
-                    , new ResActParamMan(ParamMan.address, "the bind address of the loadbalancer")
+                    new ResActParamMan(ParamMan.address, "the bind address of the loadbalancer")
                     , new ResActParamMan(ParamMan.upstream, "used as the backend servers")
+                    , new ResActParamMan(ParamMan.acceptorelg, "choose an event loop group as the acceptor event loop group. can be the same as worker event loop group", Application.DEFAULT_ACCEPTOR_EVENT_LOOP_GROUP_NAME)
+                    , new ResActParamMan(ParamMan.eventloopgroup, "choose an event loop group as the worker event loop group. can be the same as acceptor event loop group", Application.DEFAULT_WORKER_EVENT_LOOP_GROUP_NAME)
                     , new ResActParamMan(ParamMan.inbuffersize, "input buffer size", "16384 (bytes)")
                     , new ResActParamMan(ParamMan.outbuffersize, "output buffer size", "16384 (bytes)")
                     , new ResActParamMan(ParamMan.timeout, "idle timeout of connections in this lb instance", Config.tcpTimeout + " (ms)")
@@ -516,10 +516,10 @@ public class HelpCommand {
         socks5server("socks5-server", "socks5", "socks5 proxy server", Arrays.asList(
             new ResActMan(ActMan.add, "create a socks5 server",
                 Arrays.asList(
-                    new ResActParamMan(ParamMan.acceptorelg, "choose an event loop group as the acceptor event loop group. can be the same as worker event loop group", Application.DEFAULT_ACCEPTOR_EVENT_LOOP_GROUP_NAME)
-                    , new ResActParamMan(ParamMan.eventloopgroup, "choose an event loop group as the worker event loop group. can be the same as acceptor event loop group", Application.DEFAULT_WORKER_EVENT_LOOP_GROUP_NAME)
-                    , new ResActParamMan(ParamMan.address, "the bind address of the loadbalancer")
+                    new ResActParamMan(ParamMan.address, "the bind address of the loadbalancer")
                     , new ResActParamMan(ParamMan.upstream, "used as the backend servers")
+                    , new ResActParamMan(ParamMan.acceptorelg, "choose an event loop group as the acceptor event loop group. can be the same as worker event loop group", Application.DEFAULT_ACCEPTOR_EVENT_LOOP_GROUP_NAME)
+                    , new ResActParamMan(ParamMan.eventloopgroup, "choose an event loop group as the worker event loop group. can be the same as acceptor event loop group", Application.DEFAULT_WORKER_EVENT_LOOP_GROUP_NAME)
                     , new ResActParamMan(ParamMan.inbuffersize, "input buffer size", "16384 (bytes)")
                     , new ResActParamMan(ParamMan.outbuffersize, "output buffer size", "16384 (bytes)")
                     , new ResActParamMan(ParamMan.timeout, "idle timeout of connections in this socks5 server instance", Config.tcpTimeout + " (ms)")
@@ -580,9 +580,9 @@ public class HelpCommand {
         dns("dns-server", "dns", "dns server", Arrays.asList(
             new ResActMan(ActMan.add, "create a dns server",
                 Arrays.asList(
-                    new ResActParamMan(ParamMan.eventloopgroup, "choose an event loop group to run the dns server", Application.DEFAULT_WORKER_EVENT_LOOP_GROUP_NAME)
-                    , new ResActParamMan(ParamMan.address, "the bind address of the socks5 server")
+                    new ResActParamMan(ParamMan.address, "the bind address of the socks5 server")
                     , new ResActParamMan(ParamMan.upstream, "the domains to be resolved")
+                    , new ResActParamMan(ParamMan.eventloopgroup, "choose an event loop group to run the dns server", Application.DEFAULT_WORKER_EVENT_LOOP_GROUP_NAME)
                     , new ResActParamMan(ParamMan.ttl, "the ttl of responded records", "0")
                     , new ResActParamMan(ParamMan.securitygroup, "specify a security group for the dns server", "allow any")
                 ),
@@ -1284,7 +1284,7 @@ public class HelpCommand {
             )),
         usercli("user-client", "ucli", "user client of an encrypted tunnel to remote switch. Note: use list iface to see these clients",
             Arrays.asList(
-                new ResActMan(ActMan.add, "add a user client to a switch", Arrays.asList(
+                new ResActMan(ActMan.addto, "add a user client to a switch", Arrays.asList(
                     new ResActParamMan(ParamMan.pass, "password of the user"),
                     new ResActParamMan(ParamMan.vni, "vni which the user is assigned to"),
                     new ResActParamMan(ParamMan.address, "remote switch address to connect to")
@@ -1294,7 +1294,7 @@ public class HelpCommand {
                         "\"OK\""
                     )
                 )),
-                new ResActMan(ActMan.remove, "remove a user client from a switch", Collections.singletonList(
+                new ResActMan(ActMan.removefrom, "remove a user client from a switch", Collections.singletonList(
                     new ResActParamMan(ParamMan.address, "remote switch address the client connected to")
                 ), Collections.singletonList(
                     new Tuple<>(
